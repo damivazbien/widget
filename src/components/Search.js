@@ -4,7 +4,17 @@ import { checkResultErrors } from "ethers/lib/utils";
 
 const Search = () => {
     const [terms, setTerms] = useState('programing');
+    const [deboundedTerm, setDeboucedTerm] = useState(terms);
     const [results, setResults] = useState([]);
+
+    useEffect(() => {
+        const timerId = setTimeout(() => {
+            setDeboucedTerm(terms);
+        }, 1000);
+        return () => {
+            clearTimeout(timerId);
+        };
+    }, [terms]);
 
     useEffect(() => {
         const search = async () => {
@@ -14,15 +24,34 @@ const Search = () => {
                 list: 'search',
                 origin: '*',
                 format: 'json',
-                search: terms
+                srsearch: terms
             }});
-            setResults(data);
+            setResults(data.query.search);
         }
+        if(deboundedTerm){
+            search();
+        }
+        
+    }, [deboundedTerm]);
 
-        search();
-    }, [terms]);
-
-    const renderResults = results.map((result) => {})
+    const renderedResults = results.map((result) => {
+        return (
+            <div key={result.pageid} className="item">
+                <div className="right floated content">
+                    <a className="ui button" href={`https://en.wikipedia.org?curid=${result.pageid}`}>
+                        Go
+                    </a>
+                </div>
+                <div className="content">
+                    <div className="header">
+                        {result.title}
+                    </div>
+                    <span dangerouslySetInnerHTML={{__html: result.snippet}}></span>
+                    
+                </div>
+            </div>
+        );
+    })
 
     return ( 
             <div>
@@ -34,6 +63,9 @@ const Search = () => {
                             onChange={e => setTerms(e.target.value)}
                             className="input"></input>
                     </div>
+                </div>
+                <div className="ui celled list">
+                    {renderedResults}
                 </div>
             </div>
             
